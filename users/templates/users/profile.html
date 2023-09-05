@@ -1,0 +1,19 @@
+{% extends 'main/base.html' %}
+{% block content %}
+<div class="col-md-4" style="margin-left:400px">
+    <div class="card mb-4 box-shadow">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Изменить</button>
+            </form>
+            {% if not user.is_email_verified %}
+            <p>Внимание! Ваша почта не верифицирована</p>
+            <a href="{% url 'users:verify' %}" class="btn btn-primary my-2">Верифицировать почту</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

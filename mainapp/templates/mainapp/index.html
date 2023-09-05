@@ -1,0 +1,30 @@
+{% extends 'mainapp/base.html' %}
+{% block content %}
+{% for object in object_list %}
+{% load my_tags %}
+<div class="col-md-4">
+    {% if user.is_authenticated %}
+    <div class="card mb-4 box-shadow">
+        <div class="card">
+            <img class="card-img-top" src="{{ object.image|image_path_filter}}" width="400px" height="400px">
+            <div class="card-body" align="center">
+                <h5 class="card-title">{{object.name | title}}</h5>
+                <p class="card-text">{{object.description | title | truncatewords:100}}</p>
+            </div>
+            <ul class="list-group list-group-flush" align="center">
+                <li class="list-group-item" style="color:green">{{object.price}}$</li>
+                <li class="list-group-item">{{object.category.name}}</li>
+                <li class="list-group-item">Автор: {{object.author.email}}</li>
+            </ul>
+            <div class="card-body" align="center">
+                {% if is_moder or user == object.author %}
+                <a href="{% url 'main:edit_products'  object.pk%}" class="card-link">Изменить</a>
+                {% endif %}
+                <a href="#" class="card-link">Another link</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
