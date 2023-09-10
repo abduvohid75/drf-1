@@ -1,8 +1,12 @@
 from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import viewsets, generics
-from .models import Course, Lesson
-from .serializers import CourseSerializer, LessonSerializer
+from rest_framework.filters import OrderingFilter
+from rest_framework.generics import ListAPIView
+
+from .models import Course, Lesson, Payments
+from .serializers import CourseSerializer, LessonSerializer, PaymentsSerializer
 
 class LessonListCreateView(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
@@ -15,6 +19,13 @@ class LessonRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+class PaymentsListView(ListAPIView):
+    queryset = Payments.objects.all()
+    serializer_class = PaymentsSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['course', 'pay_met']
+    ordering_fields = ['date']
 
 
 def home(request):
