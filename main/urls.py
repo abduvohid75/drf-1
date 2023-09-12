@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from rest_framework import routers
 
-from mainapp.views import CourseViewSet, LessonListCreateView, LessonRetrieveUpdateDestroyView, PaymentsListView
+from mainapp.views import CourseViewSet, LessonListCreateView, LessonRetrieveUpdateView, PaymentsListView
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
@@ -30,7 +30,7 @@ urlpatterns = [
     path('', include('users.urls', namespace="users")),
     path('', include(router.urls)),
     path('lessons/', LessonListCreateView.as_view(), name='lesson-list-create'),
-    path('lessons/<int:pk>/', LessonRetrieveUpdateDestroyView.as_view(), name='lesson-retrieve-update-destroy'),
+    path('lessons/<int:pk>/', LessonRetrieveUpdateView.as_view(), name='lesson-retrieve-update-destroy'),
     path('payments/', PaymentsListView.as_view(), name='payments'),
 ]
 

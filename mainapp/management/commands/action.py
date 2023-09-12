@@ -1,21 +1,17 @@
 from django.core.management.base import BaseCommand, CommandError
 from mainapp.models import Payments, Course
+from users.models import User
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        course = Course.objects.get(id=1)
-        Payments.objects.create(
-            user='Abc',
-            date='2023-08-26 14:21:02.677708+00:00',
-            course=course,
-            sum_pay=1000,
-            pay_met=True,
+        user = User.objects.create(
+            email='admin2@sky.pro',
+            first_name='Admin',
+            last_name='Admin',
+            is_staff=True,
+            is_superuser=True,
         )
-        Payments.objects.create(
-            user='Abcq',
-            date='2023-08-26 14:21:02.677708+00:00',
-            course=course,
-            sum_pay=2000,
-            pay_met=False,
-        )
+
+        user.set_password('123password456')
+        user.save()
