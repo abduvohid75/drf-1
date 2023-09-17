@@ -4,10 +4,12 @@ from users.models import User
 
 
 class Course(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор', null=True, blank=True)
     title = models.CharField(max_length=50, verbose_name='название')
     preview = models.ImageField(verbose_name='изображение', null=True, blank=True)
     desc = models.TextField(verbose_name='описание')
+
+    subs = models.ForeignKey('Subs', on_delete=models.CASCADE, verbose_name='подписчики', null=True, blank=True)
 
     def __str__(self):
         return f'{self.title} {self.desc}'
@@ -16,9 +18,18 @@ class Course(models.Model):
         verbose_name = 'курс'
         verbose_name_plural = 'курсы'
 
+class Subs(models.Model):
+    users = models.ManyToManyField(User, verbose_name='подписчики', null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.course} {self.subs}'
+
+    class Meta:
+        verbose_name = 'подписчики'
+        verbose_name_plural = 'подписчики'
 
 class Lesson(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор', null=True, blank=True)
     title = models.CharField(max_length=50, verbose_name='название')
     preview = models.ImageField(verbose_name='изображение', null=True, blank=True)
     desc = models.TextField(verbose_name='описание')
@@ -26,7 +37,6 @@ class Lesson(models.Model):
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='курс', default=None, null=True,
                                blank=True)
-
     def __str__(self):
         return f'{self.title} {self.desc}'
 

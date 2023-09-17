@@ -3,12 +3,23 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Course, Lesson, Payments
 
+def check_url(url):
+    if url[:23] != 'https://www.youtube.com':
+        raise serializers.ValidationError('Ссылка может быть только на youtube.com')
 
 class CourseSerializer(serializers.ModelSerializer):
     lessons_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     def get_lessons_count(self, obj):
         return obj.lesson_set.count()
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if obj.subs != None and obj.subs.users.exists():
+            return obj.subs.users.filter(id=user.id).exists()
+        else:
+            return False
 
     class Meta:
         model = Course
@@ -20,7 +31,12 @@ class PaymentsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+
 class LessonSerializer(serializers.ModelSerializer):
+    author = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    link = serializers.URLField(validators=[check_url])
+
     class Meta:
         model = Lesson
         fields = '__all__'
