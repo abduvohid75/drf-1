@@ -1,18 +1,18 @@
+import stripe
 from django.shortcuts import render, get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets, generics, permissions
+from rest_framework import viewsets, generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.filters import OrderingFilter
-from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Course, Lesson, Payments, Subs
 from .serializers import CourseSerializer, LessonSerializer, PaymentsSerializer, TokenObtainPairSerializer
 from .pagination import Pagination
 
-
+stripe.api_key = 'sk_test_51NsUWaA4lSUtlIxzuyu5leDc9krpOGPZkQFYboWy1bYcfpOcuuup640YC6UDyF2du4UlSLHAIIdmesrelmnVn95Y00HZCyI2PW'
 class UserPermissionEditLesson(permissions.BasePermission):
     def has_permission(self, request, view, obj):
         if request.user.groups.filter(name='Модераторы').exists() or obj.author == request.user:
@@ -76,12 +76,38 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-class PaymentsListView(ListAPIView):
-    queryset = Payments.objects.all()
-    serializer_class = PaymentsSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['course', 'pay_met']
-    ordering_fields = ['date']
+
+class PaymentsCreateView(APIView):
+    def post(self, request):
+        serializer = PaymentsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        payment = serializer.save()
+        try:
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(payment.sum_pay * 100),
+                currency='usd',
+                metadata={
+                    'payment_id': payment.id
+                }
+            )
+
+
+            payment.payment_intent_id = payment_intent.id
+            payment.save()
+            return Response(data=payment_intent.client_secret, status=status.HTTP_201_CREATED)
+        except stripe.error.StripeError as e:
+            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentsRetrieveView(APIView):
+    def get(self, request, payment_intent_id):
+        try:
+            payment = Payments.objects.get(payment_intent_id=payment_intent_id)
+            serializer = PaymentsSerializer(payment)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        except Payments.DoesNotExist:
+            return Response(data="Payment not found", status=status.HTTP_404_NOT_FOUND)
 
 class TokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer

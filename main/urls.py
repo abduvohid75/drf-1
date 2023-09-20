@@ -17,12 +17,33 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
-from rest_framework import routers
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import routers, permissions
 
-from mainapp.views import CourseViewSet, LessonListCreateView, LessonRetrieveUpdateView, PaymentsListView
+from mainapp.views import CourseViewSet, LessonListCreateView, LessonRetrieveUpdateView,\
+    PaymentsCreateView, PaymentsRetrieveView
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="API Documentation",
+        default_version='v1',
+        description="Your API description",
+        terms_of_service="https://www.example.com/policies/terms/",
+        contact=openapi.Contact(email="contact@example.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
+
+class CoursePaymentCreateView:
+    pass
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,7 +52,10 @@ urlpatterns = [
     path('', include(router.urls)),
     path('lessons/', LessonListCreateView.as_view(), name='lesson-list-create'),
     path('lessons/<int:pk>/', LessonRetrieveUpdateView.as_view(), name='lesson-retrieve-update-destroy'),
-    path('payments/', PaymentsListView.as_view(), name='payments'),
+    path('payments/', PaymentsCreateView.as_view(), name='course_payment_create'),
+    path('payments/<str:payment_intent_id>/', PaymentsRetrieveView.as_view(), name='course_payment_retrieve'),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
 if settings.DEBUG:

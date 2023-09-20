@@ -9,4 +9,5 @@ app_name = MainappConfig.name
 urlpatterns = [
     path('', protected_home, name='home'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+
 ]

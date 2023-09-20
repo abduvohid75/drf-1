@@ -50,6 +50,7 @@ class Payments(models.Model):
     date = models.DateTimeField(verbose_name='время', null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='курс', default=None, null=True,
                                blank=True)
+    payment_intent_id = models.CharField(max_length=100, default='')
     sum_pay = models.IntegerField(verbose_name='сумма оплаты')
     pay_met = models.BooleanField(verbose_name='способ оплаты')
 
