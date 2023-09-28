@@ -1,14 +1,16 @@
+from datetime import timezone
+
 import stripe
 from django.shortcuts import render, get_object_or_404
 
 from rest_framework import viewsets, generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Course, Lesson, Payments, Subs
+from .models import Course, Lesson, Payments
 from .serializers import CourseSerializer, LessonSerializer, PaymentsSerializer, TokenObtainPairSerializer
 from .pagination import Pagination
 
@@ -50,32 +52,20 @@ class LessonRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    pagination_class = Pagination
-    permission_classes = [permissions.IsAuthenticated, ]
 
-    def get_queryset(self):
-        if self.request.method == 'POST' or self.request.method == 'PATCH':
-            sub = self.request.data.get('sub')
-            queryset = super().get_queryset()
-            obj = get_object_or_404(queryset, id=self.kwargs['pk'])
-            if obj.subs == None:
-                subs = Subs.objects.create()
-                obj.subs = subs
-            if sub == 'true':
-                obj.subs.users.add(self.request.user)
-                obj.subs.save()
-                obj.save()
-            if sub == 'false':
-                obj.subs.users.remove(self.request.user)
-                obj.subs.save()
-                obj.save()
-        else:
-            queryset = super().get_queryset()
-        return queryset
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        if 'sub' in request.data and request.data['sub'] == True:
+            user_email = request.user.email
+            if instance.subs is None:
+                instance.subs = user_email
+            instance.subs += ' ' + user_email
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 class PaymentsCreateView(APIView):
     def post(self, request):
@@ -91,8 +81,6 @@ class PaymentsCreateView(APIView):
                     'payment_id': payment.id
                 }
             )
-
-
             payment.payment_intent_id = payment_intent.id
             payment.save()
             return Response(data=payment_intent.client_secret, status=status.HTTP_201_CREATED)
@@ -108,9 +96,19 @@ class PaymentsRetrieveView(APIView):
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         except Payments.DoesNotExist:
             return Response(data="Payment not found", status=status.HTTP_404_NOT_FOUND)
-
-class TokenObtainPairView(TokenObtainPairView):
+class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        # Обновляем дату последнего входа пользователя
+        if response.status_code == 200:
+            user = request.user
+            user.last_login = timezone.now()
+            user.save()
+
+        return response
 @permission_classes([IsAuthenticated])
 def protected_home(request):
     context = {

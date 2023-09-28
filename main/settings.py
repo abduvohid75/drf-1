@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'django_celery_beat',
     'corsheaders',
 
     'mainapp',
@@ -151,3 +152,29 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
+
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+
+CELERY_RESULT_BACKEND = 'redis://localhost:6379' 
+CELERY_TIMEZONE = "Asia/Yekaterinburg"
+CELERY_TASK_TRACK_STARTED = True 
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_PORT = 587
+
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_HOST_USER='sendinfoforauth@gmail.com'
+EMAIL_HOST_PASSWORD='vmvvkaedltkhkieb'
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL='Anon sendinfoforauth@gmail.com'
+LOCATION="redis://@127.0.0.1:6379"
+
+CELERY_BEAT_SCHEDULE = {
+    'send_update_notifications': {
+        'task': 'mainapp.tasks.send_update_notification',
+        'schedule': timedelta(minutes=1),
+    },
+}

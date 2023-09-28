@@ -11,6 +11,7 @@ class User(AbstractUser, models.Model):
     avatar = models.ImageField(upload_to='users/avatars/', verbose_name='аватар', null=True, blank=True)
     phone = models.CharField(max_length=35, verbose_name='телефон', null=True, blank=True)
     country = models.CharField(max_length=30, verbose_name='страна', null=True, blank=True)
+    last_login = models.DateTimeField(verbose_name='последний вход')
 
     is_email_verified = models.BooleanField(default=False, verbose_name='статус верификации email')
 

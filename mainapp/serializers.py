@@ -9,18 +9,9 @@ def check_url(url):
 
 class CourseSerializer(serializers.ModelSerializer):
     lessons_count = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
 
     def get_lessons_count(self, obj):
         return obj.lesson_set.count()
-
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if obj.subs != None and obj.subs.users.exists():
-            return obj.subs.users.filter(id=user.id).exists()
-        else:
-            return False
-
     class Meta:
         model = Course
         fields = '__all__'
@@ -29,9 +20,6 @@ class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payments
         fields = '__all__'
-
-
-
 
 class LessonSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
